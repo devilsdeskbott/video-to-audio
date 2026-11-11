@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Video to Audio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&family=Syne:wght@700;800&display=swap">
+<style>
+:root{--bg:#f5f3ff;--panel:#fff;--ink:#1b1535;--mute:#6a6489;--line:#ddd6f3;--acc:#6d28d9;--acc-ink:#fff;--wave:#6d28d9;--err:#b3261e;--g1:#7c3aed;--g2:#db2777;--g3:#f59e0b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f0b1f;--panel:#1a1433;--ink:#f1ecff;--mute:#a59ccb;--line:#352a5e;--acc:#a78bfa;--acc-ink:#140d2e;--wave:#a78bfa;--err:#ff8a80;--g1:#a78bfa;--g2:#f472b6;--g3:#fbbf24;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0b1f;--panel:#1a1433;--ink:#f1ecff;--mute:#a59ccb;--line:#352a5e;--acc:#a78bfa;--acc-ink:#140d2e;--wave:#a78bfa;--err:#ff8a80;--g1:#a78bfa;--g2:#f472b6;--g3:#fbbf24;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.55 "Outfit","Avenir Next","Segoe UI",Roboto,system-ui,sans-serif;--grad:linear-gradient(90deg,var(--g1),var(--g2));background:radial-gradient(900px 420px at 88% -90px,color-mix(in srgb,var(--g2) 20%,transparent),transparent),radial-gradient(700px 400px at -8% 0,color-mix(in srgb,var(--g1) 22%,transparent),transparent),var(--bg)}
+main{max-width:680px;margin:0 auto;padding:32px 20px 56px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font-family:"Syne","Outfit",system-ui,sans-serif;font-size:2.6rem;line-height:1.05;margin:0 0 10px;letter-spacing:-.03em;font-weight:800;background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;width:fit-content}
+.lead{color:var(--mute);margin:0 0 24px;max-width:54ch}
+#drop{display:block;border:2px dashed var(--line);border-radius:14px;background:var(--panel);padding:30px 20px;text-align:center;cursor:pointer;transition:border-color .15s}
+#drop:hover,#drop.over,#drop:focus-within{border-color:var(--acc)}
+#drop strong{display:block;font-size:1.15rem;margin-bottom:4px}
+#drop span{color:var(--mute);font-size:.92rem}
+#file{position:absolute;opacity:0;width:1px;height:1px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:18px;box-shadow:0 10px 30px -18px color-mix(in srgb,var(--g1) 55%,transparent)}
+[hidden]{display:none!important}
+h2{font-family:"Syne","Outfit",system-ui,sans-serif;font-size:1.1rem;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--mute)}
+label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:.92rem}
+select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px}
+input[type=range]{width:100%;accent-color:var(--acc)}
+button,.dl{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 18px;background:var(--grad);color:var(--acc-ink);cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);padding:8px 14px;font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible,.dl:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.bar .main{flex:1;min-width:160px}
+.top{display:flex;justify-content:space-between;gap:10px}
+.name{font-weight:700;word-break:break-all}
+.meta{color:var(--mute);font-size:.88rem}
+.tl{height:14px;border-radius:7px;background:var(--line);position:relative;overflow:hidden;margin:14px 0 10px}
+.tl i{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3))}
+.trim{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.acts{display:flex;gap:8px;margin-top:12px}
+progress{width:100%;height:10px;margin-top:12px;accent-color:var(--acc)}
+audio{width:100%;margin:12px 0 8px}
+@media (max-width:520px){main{padding:20px 14px 40px}h1{font-size:1.8rem}.trim{grid-template-columns:1fr}.bar button,.acts button,.dl{min-height:46px}.bar .main{flex-basis:100%}.card{padding:14px}input[type=range]{height:30px}}
+@media (min-width:1100px){main{max-width:760px}}
+#msg{margin-top:16px;color:var(--mute);font-size:.92rem}
+#msg.err,.meta.err{color:var(--err)}
+.note{margin-top:28px;font-size:.88rem;color:var(--mute);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div>
+<h1>Video to audio</h1>
+<p class="lead">Drop videos you’ve saved from any platform and get the sound as MP3 or WAV. MP4 videos of any length, even many hours, are processed in small pieces, so memory never runs out. Nothing is uploaded.</p>
+</div>
+<button class="ghost" id="theme" aria-label="Switch light or dark theme">Theme</button>
+</header>
+
+<label id="drop" for="file">
+<input type="file" id="file" accept="video/*,audio/*" multiple>
+<strong>Choose video files</strong>
+<span>or drag them here, or paste. Several at once is fine.</span>
+</label>
+
+<section class="card" id="settings" hidden>
+<h2>Output settings</h2>
+<div class="grid">
+<label>Format<select id="fmt"><option value="mp3">MP3 (small)</option><option value="wav">WAV (lossless)</option></select></label>
+<label id="qwrap">Quality<select id="kbps"><option value="64">64 kbps (long talks)</option><option value="96">96 kbps (voice)</option><option value="128">128 kbps</option><option value="192">192 kbps</option><option value="256">256 kbps</option><option value="320">320 kbps</option></select></label>
+<label>Channels<select id="ch"><option value="auto">Same as video</option><option value="mono">Mono (half size)</option><option value="stereo">Stereo</option></select></label>
+<label>Fade in and out<select id="fade"><option value="0">None</option><option value="0.5">0.5 s</option><option value="1">1 s</option><option value="2">2 s</option><option value="4">4 s</option></select></label>
+</div>
+<div class="grid" style="margin-top:14px">
+<label class="chk"><input type="checkbox" id="norm"> Even out volume (normalize)</label>
+<label class="chk"><input type="checkbox" id="trimsil"> Cut silence at start and end</label>
+</div>
+<div class="bar">
+<button class="main" id="go">Extract audio</button>
+<button class="ghost" id="dlall" disabled>Download all</button>
+<button class="ghost" id="clear">Clear list</button>
+</div>
+</section>
+
+<div id="queue"></div>
+<div id="msg" role="status" aria-live="polite"></div>
+<p class="note">Keep this tab open while a long video converts. Normalize and cut silence read the file twice, so they take longer. MP4, M4A and MOV files with AAC audio (what most platforms give you) have no length limit. Other formats such as WebM or MKV are loaded fully into memory, so very long ones may fail: convert those to MP4 first. Pasting a link doesn’t work here, because browsers block pages from fetching other sites’ videos. Save the video first. Only convert videos you own or have permission to use.</p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const tick = () => new Promise(r => setTimeout(r));
+const T = s => { s = Math.floor(s); return Math.floor(s/3600) + ":" + String(Math.floor(s%3600/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0"); };
+const Z = b => b > 1073741824 ? (b/1073741824).toFixed(2) + " GB" : b > 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
+let items = [], AC = null, playing = null;
+const actx = () => AC || (AC = new (window.AudioContext || window.webkitAudioContext)());
+function say(t, e){ const m = $("#msg"); m.textContent = t || ""; m.className = e ? "err" : ""; }
+
+/* settings, remembered between visits */
+const S = { fmt:"mp3", kbps:"192", ch:"auto", fade:"0", norm:false, trimsil:false };
+try { Object.assign(S, JSON.parse(localStorage.getItem("v2a") || "{}")); } catch(e) {}
+const ids = ["fmt","kbps","ch","fade"], chk = ["norm","trimsil"];
+ids.forEach(k => { $("#"+k).value = S[k]; $("#"+k).addEventListener("change", sync); });
+chk.forEach(k => { $("#"+k).checked = S[k]; $("#"+k).addEventListener("change", sync); });
+if (typeof lamejs === "undefined") { S.fmt = "wav"; $("#fmt").value = "wav"; $("#fmt").options[0].disabled = true; }
+function sync(){
+  ids.forEach(k => S[k] = $("#"+k).value); chk.forEach(k => S[k] = $("#"+k).checked);
+  $("#qwrap").style.display = S.fmt === "mp3" ? "" : "none";
+  try { localStorage.setItem("v2a", JSON.stringify(S)); } catch(e) {}
+  items.forEach(info);
+}
+$("#qwrap").style.display = S.fmt === "mp3" ? "" : "none";
+
+/* theme */
+try { const t = localStorage.getItem("v2a-theme"); if (t) document.documentElement.dataset.theme = t; } catch(e) {}
+$("#theme").onclick = () => {
+  const d = document.documentElement, dark = d.dataset.theme ? d.dataset.theme === "dark" : matchMedia("(prefers-color-scheme:dark)").matches;
+  d.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("v2a-theme", d.dataset.theme); } catch(e) {}
+};
+
+/* MP4 / M4A / MOV reader: finds the AAC audio track so it can be decoded piece by piece */
+const ascii = (dv, p) => String.fromCharCode(dv.getUint8(p), dv.getUint8(p+1), dv.getUint8(p+2), dv.getUint8(p+3));
+const rd = async (f, a, b) => new DataView(await f.slice(a, b).arrayBuffer());
+function kids(dv, a, b){
+  const r = [];
+  while (a + 8 <= b) { let sz = dv.getUint32(a), hl = 8; const ty = ascii(dv, a+4);
+    if (sz === 1) { sz = Number(dv.getBigUint64(a+8)); hl = 16; } else if (sz === 0) sz = b - a;
+    if (sz < hl) break; r.push({ ty, s:a+hl, e:Math.min(b, a+sz) }); a += sz; }
+  return r;
+}
+const find = (dv, box, ty) => kids(dv, box.s, box.e).find(k => k.ty === ty);
+async function demux(f){
+  let pos = 0, m = null;
+  while (pos < f.size) {
+    const h = await rd(f, pos, Math.min(pos + 16, f.size)); if (h.byteLength < 8) break;
+    let sz = h.getUint32(0), hl = 8; const ty = ascii(h, 4);
+    if (sz === 1) { sz = Number(h.getBigUint64(8)); hl = 16; } else if (sz === 0) sz = f.size - pos;
+    if (sz < hl) break;
+    if (ty === "moov") { m = await rd(f, pos + hl, pos + sz); break; }
+    pos += sz;
+  }
+  if (!m) return null;
+  const root = { s:0, e:m.byteLength };
+  for (const t of kids(m, 0, m.byteLength).filter(k => k.ty === "trak")) {
+    const mdia = find(m, t, "mdia"); if (!mdia) continue;
+    const hd = find(m, mdia, "hdlr"); if (!hd || ascii(m, hd.s + 8) !== "soun") continue;
+    const mh = find(m, mdia, "mdhd"), v1 = m.getUint8(mh.s) === 1;
+    const ts = m.getUint32(mh.s + (v1 ? 20 : 12)), dur = (v1 ? Number(m.getBigUint64(mh.s + 24)) : m.getUint32(mh.s + 16)) / ts;
+    const st = find(m, find(m, mdia, "minf"), "stbl"), sd = find(m, st, "stsd");
+    const en = sd.s + 8, esz = m.getUint32(en);
+    if (ascii(m, en + 4) !== "mp4a" || m.getUint16(en + 16) !== 0) return null;
+    const nch = m.getUint16(en + 24), sr = m.getUint16(en + 32);
+    const es = kids(m, en + 36, en + esz).find(k => k.ty === "esds"); if (!es) return null;
+    const desc = p => { const tag = m.getUint8(p++); let len = 0, b; do { b = m.getUint8(p++); len = (len << 7) | (b & 127); } while (b & 128); return { tag, len, p }; };
+    let d = desc(es.s + 4); const fl = m.getUint8(d.p + 2); let p = d.p + 3;
+    if (fl & 0x80) p += 2; if (fl & 0x40) p += 1 + m.getUint8(p); if (fl & 0x20) p += 2;
+    d = desc(p); if (m.getUint8(d.p) !== 0x40) return null;
+    d = desc(d.p + 13); if (d.tag !== 5) return null;
+    const asc = new Uint8Array(m.buffer.slice(m.byteOffset + d.p, m.byteOffset + d.p + d.len));
+    const sz = find(m, st, "stsz"), sc = find(m, st, "stsc"), co = find(m, st, "stco") || find(m, st, "co64"), tt = find(m, st, "stts");
+    const co64 = co.ty === "co64", nC = m.getUint32(co.s + 4), offs = new Array(nC);
+    for (let k = 0; k < nC; k++) offs[k] = co64 ? Number(m.getBigUint64(co.s + 8 + 8*k)) : m.getUint32(co.s + 8 + 4*k);
+    const ns = m.getUint32(sz.s + 8), fixed = m.getUint32(sz.s + 4), sizes = new Uint32Array(ns);
+    for (let i = 0; i < ns; i++) sizes[i] = fixed || m.getUint32(sz.s + 12 + 4*i);
+    const ne = m.getUint32(sc.s + 4), cc = new Uint32Array(nC);
+    for (let e = 0; e < ne; e++) {
+      const a = m.getUint32(sc.s + 8 + 12*e) - 1, spc = m.getUint32(sc.s + 12 + 12*e), b = e + 1 < ne ? m.getUint32(sc.s + 8 + 12*(e+1)) - 1 : nC;
+      for (let k = a; k < b; k++) cc[k] = spc;
+    }
+    const cBytes = new Array(nC); let si = 0;
+    for (let k = 0; k < nC; k++) { let t2 = 0; for (let j = 0; j < cc[k]; j++) t2 += sizes[si++]; cBytes[k] = t2; }
+    return { sr, nch, dur, ts, delta:m.getUint32(tt.s + 12) || 1024, offs, cc, cBytes, sizes, nC,
+      cfg:{ codec:"mp4a.40." + (asc[0] >> 3), sampleRate:sr, numberOfChannels:nch, description:asc } };
+  }
+  return null;
+}
+
+/* sources of audio frames: each yields arrays of Float32Array, one per channel */
+async function* aacFrames(it){
+  const D = it.dm, out = []; let err = null;
+  const dec = new AudioDecoder({ output: d => { const c = []; for (let k = 0; k < d.numberOfChannels; k++) { const a = new Float32Array(d.numberOfFrames); d.copyTo(a, { planeIndex:k, format:"f32-planar" }); c.push(a); } d.close(); out.push(c); }, error: e => err = e });
+  dec.configure(D.cfg);
+  let si = 0;
+  for (let k0 = 0; k0 < D.nC; k0 += 16) {
+    const k1 = Math.min(D.nC, k0 + 16), reads = [];
+    for (let k = k0; k < k1; k++) reads.push(it.f.slice(D.offs[k], D.offs[k] + D.cBytes[k]).arrayBuffer());
+    const bufs = await Promise.all(reads);
+    for (let k = k0; k < k1; k++) {
+      const ab = bufs[k - k0]; let o = 0;
+      for (let j = 0; j < D.cc[k]; j++, si++) {
+        const z = D.sizes[si]; if (o + z > ab.byteLength) break;
+        dec.decode(new EncodedAudioChunk({ type:"key", timestamp:Math.round(si*D.delta/D.ts*1e6), data:new Uint8Array(ab, o, z) })); o += z;
+      }
+    }
+    while (dec.decodeQueueSize > 40 && !err) await tick();
+    if (err) throw err;
+    while (out.length) yield out.shift();
+  }
+  await dec.flush(); if (err) throw err;
+  while (out.length) yield out.shift();
+  dec.close();
+}
+function* bufFrames(b){
+  const ch = []; for (let k = 0; k < b.numberOfChannels; k++) ch.push(b.getChannelData(k));
+  for (let i = 0; i < b.length; i += 48000) yield ch.map(a => a.subarray(i, i + 48000));
+}
+async function open(it){
+  if (it.dm) return { sr:it.dm.sr, nch:it.dm.nch, gen:() => aacFrames(it) };
+  if (!it.cache) it.cache = await actx().decodeAudioData(await it.f.arrayBuffer());
+  const b = it.cache; return { sr:b.sampleRate, nch:b.numberOfChannels, gen:() => bufFrames(b) };
+}
+async function scan(gen, onp, fn){
+  let p = 0, t = performance.now();
+  for await (const ch of gen) { fn(ch, p); p += ch[0].length; if (performance.now() - t > 60) { t = performance.now(); onp(p); await tick(); } }
+  return p;
+}
+
+/* adding files */
+const drop = $("#drop");
+["dragenter","dragover"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(e => drop.addEventListener(e, () => drop.classList.remove("over")));
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => { e.preventDefault(); if (e.dataTransfer.files.length) add(e.dataTransfer.files); });
+window.addEventListener("paste", e => { if (e.clipboardData.files.length) add(e.clipboardData.files); });
+$("#file").addEventListener("change", e => { add(e.target.files); e.target.value = ""; });
+
+async function add(list){
+  for (const f of Array.from(list)) {
+    const el = document.createElement("article"); el.className = "card";
+    el.innerHTML = '<div class="top"><div><div class="name"></div><div class="meta">Reading…</div></div><button class="ghost rm" aria-label="Remove">Remove</button></div>' +
+      '<div class="body" hidden><div class="tl"><i></i></div><div class="trim">' +
+      '<label>Start <b class="ts"></b><input type="range" class="rs" min="0" value="0"></label>' +
+      '<label>End <b class="te"></b><input type="range" class="re" min="0"></label></div>' +
+      '<div class="acts"><button class="ghost pv">Preview selection</button></div>' +
+      '<progress max="100" value="0" hidden></progress><div class="res" hidden><audio controls></audio><a class="dl" download></a></div></div>';
+    el.querySelector(".name").textContent = f.name;
+    $("#queue").appendChild(el);
+    const it = { f, el, dm:null, url:null }; el._it = it; items.push(it);
+    $("#settings").hidden = false;
+    it.u = URL.createObjectURL(f); it.v = document.createElement("video"); it.v.preload = "metadata";
+    const meta = new Promise(r => { it.v.onloadedmetadata = () => r(it.v.duration); it.v.onerror = () => r(NaN); });
+    it.v.src = it.u;
+    try { const d = await demux(f); if (d && window.AudioDecoder && (await AudioDecoder.isConfigSupported(d.cfg)).supported) it.dm = d; } catch(e) { it.dm = null; }
+    const vd = await meta; it.dur = it.dm ? it.dm.dur : vd;
+    if (!isFinite(it.dur) || it.dur <= 0) {
+      const m = el.querySelector(".meta"); m.textContent = "Couldn’t read this file. Try an MP4 with AAC audio."; m.classList.add("err"); continue;
+    }
+    it.start = 0; it.end = it.dur;
+    const rs = el.querySelector(".rs"), re = el.querySelector(".re");
+    rs.max = re.max = it.dur; rs.step = re.step = it.dur > 1800 ? 1 : 0.1; re.value = it.dur;
+    el.querySelector(".body").hidden = false; info(it);
+  }
+}
+function info(it){
+  if (!it.dur || !it.end) return;
+  const d = it.end - it.start, nch = it.dm ? it.dm.nch : 2, sr = it.dm ? it.dm.sr : 44100;
+  const oc = S.ch === "mono" ? 1 : S.ch === "stereo" ? 2 : Math.min(2, nch);
+  const est = S.fmt === "mp3" ? +S.kbps*125*d : sr*oc*2*d;
+  it.el.querySelector(".meta").textContent = T(it.dur) + " total · selected " + T(d) + " · about " + Z(est) + " as " + S.fmt.toUpperCase() + (it.dm ? " · streams, no length limit" : " · loads into memory");
+  it.el.querySelector(".ts").textContent = T(it.start); it.el.querySelector(".te").textContent = T(it.end);
+  const i = it.el.querySelector(".tl i"); i.style.left = it.start/it.dur*100 + "%"; i.style.width = d/it.dur*100 + "%";
+}
+
+/* trim sliders, preview, remove */
+$("#queue").addEventListener("input", e => {
+  const it = e.target.closest("article")?._it; if (!it || !it.dur) return;
+  let s = +it.el.querySelector(".rs").value, z = +it.el.querySelector(".re").value;
+  if (e.target.classList.contains("rs")) { if (s > z - 0.2) s = Math.max(0, z - 0.2); e.target.value = s; }
+  else if (e.target.classList.contains("re")) { if (z < s + 0.2) z = Math.min(it.dur, s + 0.2); e.target.value = z; }
+  it.start = s; it.end = z; info(it);
+});
+$("#queue").addEventListener("click", e => {
+  const it = e.target.closest("article")?._it; if (!it) return;
+  if (e.target.classList.contains("rm")) { stop(); URL.revokeObjectURL(it.u); if (it.url) URL.revokeObjectURL(it.url); items = items.filter(x => x !== it); it.el.remove(); }
+  if (e.target.classList.contains("pv")) preview(it, e.target);
+});
+function stop(){ if (playing) { const v = playing.it.v; v.pause(); v.ontimeupdate = v.onended = null; playing.btn.textContent = "Preview selection"; playing = null; } }
+function preview(it, btn){
+  const was = playing && playing.btn === btn; stop(); if (was) return;
+  const v = it.v; v.currentTime = it.start; v.play().catch(() => stop()); btn.textContent = "Stop preview"; playing = { it, btn };
+  v.ontimeupdate = () => { if (v.currentTime >= it.end) stop(); }; v.onended = stop;
+}
+
+/* conversion: reads the file in pieces, so length is not limited for MP4 */
+async function convert(it){
+  const bar = it.el.querySelector("progress"); bar.hidden = false; bar.value = 0;
+  const { sr, nch, gen } = await open(it), total = Math.max(1, Math.round(it.dur*sr));
+  const s = Math.round(it.start*sr), e = it.end >= it.dur - 0.05 ? Infinity : Math.round(it.end*sr);
+  const passes = (S.norm || S.trimsil) ? 2 : 1, prog = (ph, p) => { bar.value = Math.min(100, (ph + Math.min(1, p/total))/passes*100); };
+  let g = 1, s2 = s, e2 = e, known = total;
+  if (passes === 2) {
+    let pk = 0, first = -1, last = -1;
+    known = await scan(gen(), p => prog(0, p), (ch, p) => {
+      const lo = Math.max(0, s - p), hi = Math.min(ch[0].length, e - p);
+      for (let i = lo; i < hi; i++) { let m = 0; for (let c = 0; c < ch.length; c++) { const v = Math.abs(ch[c][i]); if (v > m) m = v; } if (m > pk) pk = m; if (m >= 0.01) { if (first < 0) first = p + i; last = p + i; } }
+    });
+    if (S.norm && pk > 0.0001) g = Math.min(20, 0.97/pk);
+    if (S.trimsil && first >= 0) { s2 = first; e2 = Math.min(e, last + 1); }
+  }
+  const n = Math.max(1, (Number.isFinite(e2) ? e2 : known) - s2), fd = Math.floor(+S.fade*sr);
+  const oc = S.ch === "mono" ? 1 : S.ch === "stereo" ? 2 : Math.min(2, nch);
+  const enc = S.fmt === "mp3" ? new lamejs.Mp3Encoder(oc, sr, +S.kbps) : null, parts = []; let written = 0;
+  await scan(gen(), p => prog(passes - 1, p), (ch, p) => {
+    const lo = Math.max(0, s2 - p), hi = Math.min(ch[0].length, e2 - p); if (hi <= lo) return;
+    const m = hi - lo, o = [];
+    for (let c = 0; c < oc; c++) {
+      const a = new Int16Array(m);
+      for (let i = 0; i < m; i++) {
+        const j = lo + i, k = p + j - s2;
+        let v = oc === 1 && ch.length > 1 ? (ch[0][j] + ch[1][j])/2 : ch[Math.min(c, ch.length - 1)][j];
+        v *= g; if (k < fd) v *= k/fd; else if (n - k < fd) v *= Math.max(0, n - k)/fd;
+        a[i] = v >= 1 ? 32767 : v <= -1 ? -32768 : v < 0 ? v*32768 : v*32767;
+      }
+      o.push(a);
+    }
+    if (enc) { const b = oc > 1 ? enc.encodeBuffer(o[0], o[1]) : enc.encodeBuffer(o[0]); if (b.length) parts.push(new Uint8Array(b)); }
+    else { const ia = new Int16Array(m*oc); for (let i = 0; i < m; i++) for (let c = 0; c < oc; c++) ia[i*oc + c] = o[c][i]; parts.push(ia); written += m*oc*2; }
+  });
+  let blob;
+  if (enc) { const end = enc.flush(); if (end.length) parts.push(new Uint8Array(end)); blob = new Blob(parts, { type:"audio/mpeg" }); }
+  else {
+    if (written > 4294967000) throw new Error("WAV too long");
+    const h = new DataView(new ArrayBuffer(44)), str = (o, t) => { for (let i = 0; i < 4; i++) h.setUint8(o + i, t.charCodeAt(i)); };
+    str(0,"RIFF"); h.setUint32(4, 36 + written, true); str(8,"WAVE"); str(12,"fmt "); h.setUint32(16,16,true); h.setUint16(20,1,true); h.setUint16(22,oc,true);
+    h.setUint32(24,sr,true); h.setUint32(28,sr*oc*2,true); h.setUint16(32,oc*2,true); h.setUint16(34,16,true); str(36,"data"); h.setUint32(40,written,true);
+    blob = new Blob([h.buffer, ...parts], { type:"audio/wav" });
+  }
+  it.cache = null;
+  if (it.url) URL.revokeObjectURL(it.url);
+  it.url = URL.createObjectURL(blob);
+  const dl = it.el.querySelector(".dl");
+  it.el.querySelector("audio").src = it.url;
+  dl.href = it.url; dl.download = it.f.name.replace(/\.[^.]+$/, "") + "." + S.fmt; dl.textContent = "Download " + S.fmt.toUpperCase() + " (" + Z(blob.size) + ")";
+  it.el.querySelector(".res").hidden = false; bar.value = 100;
+}
+$("#go").onclick = async () => {
+  const ready = items.filter(i => i.dur); if (!ready.length) { say("Add a video first, or wait until it has finished loading.", true); return; }
+  stop(); $("#go").disabled = true; say("");
+  let done = 0;
+  for (const it of ready) {
+    say("Extracting " + (done + 1) + " of " + ready.length + ". Keep this tab open.");
+    try { await convert(it); done++; } catch (e) { it.cache = null; const m = it.el.querySelector(".meta"); m.textContent = "Conversion failed. " + (it.dm ? "Try WAV off, or a shorter selection." : "This format loads into memory: convert it to MP4 first, or select a shorter part."); m.classList.add("err"); }
+  }
+  $("#go").disabled = false; $("#dlall").disabled = !items.some(i => i.url);
+  say(done ? "Done. Play each result or download it." : "Nothing was converted.", !done);
+};
+$("#dlall").onclick = async () => { for (const it of items) if (it.url) { it.el.querySelector(".dl").click(); await new Promise(r => setTimeout(r, 500)); } };
+$("#clear").onclick = () => { stop(); items.forEach(i => { URL.revokeObjectURL(i.u); if (i.url) URL.revokeObjectURL(i.url); i.el.remove(); }); items = []; $("#settings").hidden = true; $("#dlall").disabled = true; say(""); };
+</script>
+</body>
+</html>
